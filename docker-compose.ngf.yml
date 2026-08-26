@@ -1,0 +1,123 @@
+name: ngf-marketplace
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .marketplace.env
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - marketplace_db:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - marketplace_redis:/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ngf-marketplace:latest
+    restart: unless-stopped
+    env_file:
+      - .marketplace.env
+    ports:
+      - "127.0.0.1:8100:80"
+    volumes:
+      - marketplace_storage:/var/www/html/storage/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://127.0.0.1/ >/dev/null || exit 1"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  reverb:
+    image: ngf-marketplace:latest
+    restart: unless-stopped
+    env_file:
+      - .marketplace.env
+    command:
+      [
+        "php",
+        "artisan",
+        "reverb:start",
+        "--host=0.0.0.0",
+        "--port=8080"
+      ]
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - marketplace_storage:/var/www/html/storage/app
+    depends_on:
+      app:
+        condition: service_started
+
+  queue:
+    image: ngf-marketplace:latest
+    restart: unless-stopped
+    env_file:
+      - .marketplace.env
+    command:
+      [
+        "php",
+        "artisan",
+        "queue:work",
+        "redis",
+        "--sleep=1",
+        "--tries=3",
+        "--timeout=1800"
+      ]
+    volumes:
+      - marketplace_storage:/var/www/html/storage/app
+    depends_on:
+      app:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  scheduler:
+    image: ngf-marketplace:latest
+    restart: unless-stopped
+    env_file:
+      - .marketplace.env
+    command:
+      [
+        "sh",
+        "-lc",
+        "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+      ]
+    volumes:
+      - marketplace_storage:/var/www/html/storage/app
+    depends_on:
+      app:
+        condition: service_started
+
+volumes:
+  marketplace_db:
+  marketplace_redis:
+  marketplace_storage:
