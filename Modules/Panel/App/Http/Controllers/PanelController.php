@@ -84,7 +84,10 @@ class PanelController extends Controller
     {
         $listing->assertOwnedBy($request->user());
 
-        $listing->updateFromPanel($request->validated() + [
+        $validated = $request->validated();
+        $validated['country'] = 'United States';
+
+        $listing->updateFromPanel($validated + [
             'currency' => $listing->currency ?: ListingPanelHelper::defaultCurrency(),
         ]);
 

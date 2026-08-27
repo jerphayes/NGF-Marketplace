@@ -170,24 +170,20 @@
 
                             <div class="field">
                                 <label class="field__label" for="listing-country">{{ __('site::messages.country') }}</label>
-                                <select id="listing-country" class="select" wire:model.live="selectedCountryId">
-                                    <option value="">{{ __('site::messages.all_countries') }}</option>
-                                    @foreach($countries as $country)
-                                        <option value="{{ $country['id'] }}">{{ $country['name'] }}</option>
-                                    @endforeach
-                                </select>
-                                @error('selectedCountryId')<p class="field__error">{{ $message }}</p>@enderror
+                                <input id="listing-country" type="text" class="input" value="United States" readonly aria-readonly="true">
                             </div>
 
                             <div class="field">
                                 <label class="field__label" for="listing-city">{{ __('site::messages.city') }}</label>
-                                <select id="listing-city" class="select" wire:model="selectedCityId" @disabled($this->availableCities === [])>
-                                    <option value="">{{ __('site::messages.all_cities') }}</option>
-                                    @foreach($this->availableCities as $city)
-                                        <option value="{{ $city['id'] }}">{{ $city['name'] }}</option>
-                                    @endforeach
-                                </select>
-                                @error('selectedCityId')<p class="field__error">{{ $message }}</p>@enderror
+                                <input
+                                    id="listing-city"
+                                    type="text"
+                                    class="input"
+                                    wire:model.blur="city"
+                                    placeholder="Houston"
+                                    autocomplete="address-level2"
+                                >
+                                @error('city')<p class="field__error">{{ $message }}</p>@enderror
                             </div>
                         </div>
 

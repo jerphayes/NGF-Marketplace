@@ -178,7 +178,10 @@ class Listing extends Model implements HasMedia
             ->forCategoryIds(is_array($categoryIds) ? $categoryIds : null)
             ->when(! is_null($userId) && $userId > 0, fn (Builder $builder) => $builder->where('user_id', $userId))
             ->when($country !== null && $country !== '', fn (Builder $builder) => $builder->where('country', $country))
-            ->when($city !== null && $city !== '', fn (Builder $builder) => $builder->where('city', $city))
+            ->when(
+                $city !== null && $city !== '',
+                fn (Builder $builder) => $builder->whereRaw('LOWER(city) LIKE ?', ['%'.mb_strtolower($city).'%'])
+            )
             ->when(! is_null($minPrice), fn (Builder $builder) => $builder->whereNotNull('price')->where('price', '>=', $minPrice))
             ->when(! is_null($maxPrice), fn (Builder $builder) => $builder->whereNotNull('price')->where('price', '<=', $maxPrice));
 

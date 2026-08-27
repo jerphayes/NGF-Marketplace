@@ -11,7 +11,6 @@ use Modules\Conversation\App\Models\Conversation;
 use Modules\Favorite\App\Models\FavoriteSearch;
 use Modules\Listing\Models\Listing;
 use Modules\Listing\Support\ListingCustomFieldSchemaBuilder;
-use Modules\Location\Models\Country;
 use Modules\Offer\Models\Offer;
 use Modules\Report\Models\Report;
 use Modules\Review\Models\Review;
@@ -28,11 +27,7 @@ class ListingController extends Controller
         $categoryId = request()->integer('category');
         $categoryId = $categoryId > 0 ? $categoryId : null;
 
-        $countryId = request()->integer('country');
-        $countryId = $countryId > 0 ? $countryId : null;
-
-        $cityId = request()->integer('city');
-        $cityId = $cityId > 0 ? $cityId : null;
+        $cityInput = trim((string) request('city', ''));
 
         $sellerUserId = request()->integer('user');
         $sellerUserId = $sellerUserId > 0 ? $sellerUserId : null;
@@ -54,13 +49,10 @@ class ListingController extends Controller
             $sort = 'smart';
         }
 
-        $locationSelection = Country::browseSelection($countryId, $cityId);
-        $countryId = $locationSelection['country_id'];
-        $cityId = $locationSelection['city_id'];
-        $countries = $locationSelection['countries'];
-        $cities = $locationSelection['cities'];
-        $selectedCountryName = $locationSelection['selected_country_name'];
-        $selectedCityName = $locationSelection['selected_city_name'];
+        // NGF Marketplace currently operates in the United States only.
+        // Country is fixed for listing creation; browse location filtering is by city.
+        $selectedCountryName = 'United States';
+        $selectedCityName = $cityInput !== '' ? $cityInput : null;
 
         $listingDirectory = Category::listingDirectory($categoryId);
 
@@ -117,15 +109,12 @@ class ListingController extends Controller
             'listings',
             'search',
             'categoryId',
-            'countryId',
-            'cityId',
+            'cityInput',
             'sellerUserId',
             'minPriceInput',
             'maxPriceInput',
             'dateFilter',
             'sort',
-            'countries',
-            'cities',
             'selectedCategory',
             'categories',
             'favoriteListingIds',

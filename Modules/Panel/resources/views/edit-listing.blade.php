@@ -83,7 +83,7 @@
             <div class="card__body">
                 <div class="field">
                     <label class="field__label" for="country">{{ __('site::messages.country') }}</label>
-                    <input id="country" type="text" name="country" value="{{ old('country', $listing->getAttribute('country')) }}" class="input">
+                    <input id="country" type="text" name="country" value="United States" class="input" readonly aria-readonly="true">
                 </div>
                 <div class="field">
                     <label class="field__label" for="city">{{ __('site::messages.city') }}</label>

@@ -85,21 +85,19 @@
                             <p class="filter-group__title">{{ __('site::messages.location') }}</p>
                             <div class="field">
                                 <label class="field__label" for="filter-country">{{ __('site::messages.country') }}</label>
-                                <select id="filter-country" name="country" class="select">
-                                    <option value="">{{ __('site::messages.all_countries') }}</option>
-                                    @foreach($countries as $country)
-                                        <option value="{{ $country->getKey() }}" @selected($countryId === (int) $country->getKey())>{{ $country->getAttribute('name') }}</option>
-                                    @endforeach
-                                </select>
+                                <input id="filter-country" type="text" class="input" value="United States" readonly aria-readonly="true">
                             </div>
                             <div class="field">
                                 <label class="field__label" for="filter-city">{{ __('site::messages.city') }}</label>
-                                <select id="filter-city" name="city" class="select" @disabled($cities->isEmpty())>
-                                    <option value="">{{ __('site::messages.all_cities') }}</option>
-                                    @foreach($cities as $city)
-                                        <option value="{{ $city->getKey() }}" @selected($cityId === (int) $city->getKey())>{{ $city->getAttribute('name') }}</option>
-                                    @endforeach
-                                </select>
+                                <input
+                                    id="filter-city"
+                                    type="text"
+                                    name="city"
+                                    class="input"
+                                    value="{{ $cityInput }}"
+                                    placeholder="Houston"
+                                    autocomplete="address-level2"
+                                >
                             </div>
                         </div>
 

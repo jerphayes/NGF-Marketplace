@@ -75,6 +75,8 @@ class PanelQuickListingForm extends Component
 
     public string $description = '';
 
+    public string $city = '';
+
     public ?int $selectedCountryId = null;
 
     public ?int $selectedCityId = null;
@@ -416,28 +418,14 @@ class PanelQuickListingForm extends Component
 
     public function getSelectedCountryNameProperty(): ?string
     {
-        if (! $this->selectedCountryId) {
-            return null;
-        }
-
-        $country = collect($this->countries)->firstWhere('id', $this->selectedCountryId);
-
-        return $country['name'] ?? null;
+        return 'United States';
     }
 
     public function getSelectedCityNameProperty(): ?string
     {
-        if (! $this->selectedCityId) {
-            return null;
-        }
+        $city = trim($this->city);
 
-        if ((int) $this->selectedCityId === self::OTHER_CITY_ID) {
-            return 'Other';
-        }
-
-        $city = collect($this->cities)->firstWhere('id', $this->selectedCityId);
-
-        return $city['name'] ?? null;
+        return $city === '' ? null : $city;
     }
 
     public function getPreviewCustomFieldsProperty(): array
@@ -538,23 +526,7 @@ class PanelQuickListingForm extends Component
             'listingTitle' => ['required', 'string', 'max:70'],
             'price' => ['required', 'numeric', 'min:0'],
             'description' => ['required', 'string', 'max:1450'],
-            'selectedCountryId' => ['required', 'integer', Rule::in(collect($this->countries)->pluck('id')->all())],
-            'selectedCityId' => [
-                'nullable',
-                'integer',
-                function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (is_null($value) || $value === '') {
-                        return;
-                    }
-
-                    $cityExists = collect($this->availableCities)
-                        ->contains(fn (array $city): bool => $city['id'] === (int) $value);
-
-                    if (! $cityExists) {
-                        $fail('The selected city does not belong to the chosen country.');
-                    }
-                },
-            ],
+            'city' => ['required', 'string', 'max:120'],
         ], [
             'listingTitle.required' => 'A title is required.',
             'listingTitle.max' => 'The title may not exceed 70 characters.',
@@ -562,7 +534,7 @@ class PanelQuickListingForm extends Component
             'price.numeric' => 'The price must be numeric.',
             'description.required' => 'A description is required.',
             'description.max' => 'The description may not exceed 1450 characters.',
-            'selectedCountryId.required' => 'Please choose a country.',
+            'city.required' => 'Please enter a city.',
         ]);
     }
 
@@ -631,8 +603,8 @@ class PanelQuickListingForm extends Component
             'custom_fields' => $this->sanitizedCustomFieldValues(),
             'contact_email' => (string) $user->email,
             'contact_phone' => Profile::phoneForUser($user),
-            'country' => $this->selectedCountryName,
-            'city' => $this->selectedCityName,
+            'country' => 'United States',
+            'city' => trim($this->city),
         ];
 
         $listing = Listing::createFromFrontend($payload, $user->getKey());
@@ -733,23 +705,10 @@ class PanelQuickListingForm extends Component
             return;
         }
 
-        $profileCountry = trim((string) ($profile->country ?? ''));
         $profileCity = trim((string) ($profile->city ?? ''));
 
-        if ($profileCountry !== '') {
-            $country = collect($this->countries)->first(fn (array $country): bool => mb_strtolower($country['name']) === mb_strtolower($profileCountry));
-
-            if (is_array($country)) {
-                $this->selectedCountryId = $country['id'];
-            }
-        }
-
-        if ($profileCity !== '' && $this->selectedCountryId) {
-            $city = collect($this->availableCities)->first(fn (array $city): bool => mb_strtolower($city['name']) === mb_strtolower($profileCity));
-
-            if (is_array($city)) {
-                $this->selectedCityId = $city['id'];
-            }
+        if ($profileCity !== '') {
+            $this->city = $profileCity;
         }
     }
 
@@ -793,8 +752,7 @@ class PanelQuickListingForm extends Component
             'listingTitle',
             'price',
             'description',
-            'selectedCountryId',
-            'selectedCityId',
+            'city',
         ], true))) {
             return 3;
         }
@@ -826,8 +784,7 @@ class PanelQuickListingForm extends Component
         $this->listingTitle = (string) ($draft['listingTitle'] ?? '');
         $this->price = (string) ($draft['price'] ?? '');
         $this->description = (string) ($draft['description'] ?? '');
-        $this->selectedCountryId = isset($draft['selectedCountryId']) ? (int) $draft['selectedCountryId'] : $this->selectedCountryId;
-        $this->selectedCityId = isset($draft['selectedCityId']) ? (int) $draft['selectedCityId'] : null;
+        $this->city = (string) ($draft['city'] ?? $this->city);
         $this->customFieldValues = is_array($draft['customFieldValues'] ?? null) ? $draft['customFieldValues'] : [];
 
         if ($this->selectedCategoryId) {
@@ -850,8 +807,7 @@ class PanelQuickListingForm extends Component
             'listingTitle' => $this->listingTitle,
             'price' => $this->price,
             'description' => $this->description,
-            'selectedCountryId' => $this->selectedCountryId,
-            'selectedCityId' => $this->selectedCityId,
+            'city' => $this->city,
             'customFieldValues' => $this->customFieldValues,
         ]);
     }

@@ -108,24 +108,27 @@
                     >
                         <div class="field">
                             <label class="field__label" for="header-country">{{ __('site::messages.country') }}</label>
-                            <select id="header-country" class="select" data-location-country>
-                                <option value="">{{ __('site::messages.all_countries') }}</option>
-                                @foreach($countries as $country)
-                                    <option
-                                        value="{{ $country['id'] }}"
-                                        data-code="{{ strtoupper($country['code'] ?? '') }}"
-                                        data-name="{{ $country['name'] }}"
-                                    >{{ $country['name'] }}</option>
-                                @endforeach
-                            </select>
+                            <input
+                                id="header-country"
+                                type="text"
+                                class="input"
+                                value="United States"
+                                readonly
+                                aria-readonly="true"
+                            >
                         </div>
                         <div class="field">
                             <label class="field__label" for="header-city">{{ __('site::messages.city') }}</label>
-                            <select id="header-city" class="select" data-location-city disabled>
-                                <option value="">{{ __('site::messages.all_cities') }}</option>
-                            </select>
+                            <input
+                                id="header-city"
+                                type="text"
+                                class="input"
+                                data-location-city
+                                placeholder="Houston"
+                                autocomplete="address-level2"
+                            >
                         </div>
-                        <p class="field__hint" data-location-status>{{ __('site::messages.location_hint') }}</p>
+                        <p class="field__hint" data-location-status>Enter a U.S. city to set your Marketplace location.</p>
                         <button type="button" class="button button--primary button--block" data-location-apply>
                             {{ __('site::messages.apply') }}
                         </button>
